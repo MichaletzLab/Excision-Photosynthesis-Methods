@@ -1,0 +1,430 @@
+---
+title: "ExcisionAnalysis.1.8.23"
+output: html_document
+date: "2024-01-08"
+---
+
+Libraries:
+```{r}
+library(readxl)
+library(dplyr)
+library(hms)
+library(patchwork)
+library(cowplot)
+library(car)
+library(ggplot2)
+library(ggpubr)
+library(emmeans)
+library(lubridate)
+library(lme4)
+library(lmerTest)
+library(broom)
+library(rstatix)
+library(grid)
+library(tidyr)
+library(writexl)
+library(stargazer)
+library(margins)
+library(sjPlot)
+library(fastDummies)
+library(webuse)
+library(ggeffects)
+library(tidyverse)
+library(openxlsx)
+library(rstatix)
+library(kableExtra)
+library(FactoMineR)
+library(vcd)
+library(factoextra)
+```
+
+**First read in the two R scripts: Read.and.Modify.Data and Create.Delta.Data**
+
+--------------------------------------------------------------------------------
+**Oak Section of Methods Figure:** Figure 1
+--------------------------------------------------------------------------------
+Oak Panels:
+```{r}
+(qg.dat= full.exin.data%>%
+   filter(species=="Q. garryana")%>%
+   group_by(Ex.int, obs,time) %>%
+  summarize(A_avg = mean(as.numeric(A))))
+(qg.plot1=qg.dat%>%
+  ggplot(aes(x =time, y=A_avg,color = Ex.int, group=Ex.int)) +    geom_line()+geom_point()+
+   theme_bw()+ scale_color_manual(values=c("dodgerblue1", "deeppink4"),name="")+
+    xlab("Time of day (hours)")+ylab(expression('A (μmol m'^-2*'s'^-1*')'))+labs(color=NULL, title="Q. garryana")+
+    geom_errorbar(aes(
+      ymin = A_avg - ifelse(Ex.int == "Intact", 1.27177, 1.866506),
+      ymax = A_avg + ifelse(Ex.int == "Intact", 1.27177, 1.866506)),width = 0.2)+
+   theme(axis.text.x=element_text(size=12),axis.text.y=element_text(size=15),axis.title.x=element_text(size=15),axis.title.y=element_text(size=15),legend.text = element_text(size = 15))+
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          axis.line = element_line(color = "black"),panel.border = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1)))
+
+(wqg.dat= full.exin.data%>%
+   filter(species=="Q. garryana")%>%
+   group_by(Ex.int, obs,time) %>%
+  summarize(mpa_avg = mean(calc.wp)))
+
+(wqg.plot1=wqg.dat%>%
+  ggplot(aes(x =time, y=mpa_avg,color = Ex.int, group=Ex.int)) +    geom_line()+geom_point()+
+   theme_bw()+ scale_color_manual(values=c("dodgerblue1", "deeppink4"),name="")+
+    geom_errorbar(aes(
+      ymin = mpa_avg - ifelse(Ex.int == "Intact", 0.2014454, 0.06166861), 
+      ymax = mpa_avg + ifelse(Ex.int == "Intact", 0.2014454, 0.06166861)),width = 0.2)+
+    xlab("Time of day (hours)")+ylab("Ψ (MPa)")+labs(color=NULL)+
+    theme(axis.text.x=element_text(size=12),axis.text.y=element_text(size=15),axis.title.x=element_text(size=15),axis.title.y=element_text(size=15),legend.text = element_text(size = 15))+
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          axis.line = element_line(color = "black"),panel.border = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1)))
+
+(gqg.dat= full.exin.data%>%
+   filter(species=="Q. garryana")%>%
+   group_by(Ex.int, obs, time) %>%
+  summarize(g_avg = mean(as.numeric(gsw))))
+
+(gqg.plot1=gqg.dat%>%
+  ggplot(aes(x =time, y=g_avg,color = Ex.int, group=Ex.int)) +    geom_line()+geom_point()+
+   theme_bw()+ scale_color_manual(values=c("dodgerblue1", "deeppink4"),name="")+
+    xlab("Time of day (hours)")+ylab(expression('g'[sw]* ' (mol m'^-2*'s'^-1*')'))+
+    geom_errorbar(aes(
+      ymin = g_avg - ifelse(Ex.int == "Intact", 0.01302309, 0.0181749),
+      ymax = g_avg + ifelse(Ex.int == "Intact", 0.01302309, 0.0181749)),width = 0.2)+
+    theme(axis.text.x=element_text(size=12),axis.text.y=element_text(size=15),axis.title.x=element_text(size=15),axis.title.y=element_text(size=15),legend.text = element_text(size = 15))+
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          axis.line = element_line(color = "black"),panel.border = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1)))
+
+(qg.time=ggarrange(qg.plot1,wqg.plot1,gqg.plot1,ncol=3,nrow=1,labels=c("H","I","J"), common.legend=TRUE))
+```
+
+--------------------------------------------------------------------------------
+**Overall Water Potential Figure:** Figure 2
+--------------------------------------------------------------------------------
+```{r}
+full.exin.data$obs=as.character(full.exin.data$obs)
+watpot.lm=lm(calc.wp~hhmmss...5,data=full.exin.data)
+(summary(watpot.lm)) #Time is not significant!
+A.watpot.lm.dat=full.exin.data%>%
+  filter(Ex.int=="Intact")
+A.watpot.lm=lm(A~calc.wp,data=A.watpot.lm.dat)
+(summary(A.watpot.lm)) #Water potential is actually a good predictor of intact A...
+
+wat.mean.ex <- full.exin.data %>%
+  filter(Ex.int == "Excised") %>%
+  group_by(obs) %>%
+  summarize(
+    mean_Water.pot = mean(calc.wp),
+    SE_wat.pot = sd(calc.wp) / sqrt(n()))
+
+wat.mean.int <- full.exin.data %>%
+  filter(Ex.int == "Intact") %>%
+  group_by(obs) %>%
+  summarize(
+    mean_Water.pot = mean(calc.wp),
+    SE_wat.pot = sd(calc.wp) / sqrt(n()))
+
+wat.mean.ex$Set <- "Excised"
+wat.mean.int$Set <- "Intact"
+(wat.df <- bind_rows(wat.mean.ex, wat.mean.int))
+
+(watpotplot=wat.df%>%
+  ggplot(aes(x =time, y=mean_Water.pot,color = Set, group=Set)) +    geom_line()+geom_point()+
+   theme_bw()+ scale_color_manual(values=c("dodgerblue1", "deeppink4"),name="")+
+    geom_errorbar(aes(
+      ymin = mean_Water.pot - SE_wat.pot,
+      ymax = mean_Water.pot + SE_wat.pot),width = 0.2)+
+    xlab("Time of day (hours)")+ylab("Ψ (MPa)")+
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          axis.line = element_line(color = "black"),panel.border = element_blank()))
+
+(watpotplot.reg = wat.df %>%
+  ggplot(aes(x = time, y = mean_Water.pot, color = Set, group = Set)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE, aes(group = Set, color = Set, fill = Set)) + # Set color and fill aesthetics
+  theme_bw() +
+  scale_color_manual(values = c("dodgerblue1", "deeppink4"), name = "") +
+  scale_fill_manual(values = c("dodgerblue1", "deeppink4"), name = "") + # Set fill colors for the bands
+  xlab("Time of day (hours)") +
+  ylab("Ψ (MPa)") +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    panel.border = element_blank()
+  )
+)
+```
+
+--------------------------------------------------------------------------------
+**Aint vs. Aex Plots:** Figure 3
+--------------------------------------------------------------------------------
+Graph Aint vs. Aex and color by species - show 1:1 line
+```{r}
+(Aint.vs.Aex= full.exin.delta%>%
+   filter(A.ex>0)%>%
+   filter(A.int>0)%>%
+  ggscatter(x ="A.int", y="A.ex",color = "species",add = "reg.line", conf.int = TRUE) +
+   theme_classic()+theme(axis.text.x=element_text(size=15),axis.text.y=element_text(size=15))+
+    xlab(expression('Intact A (μmol m'^-2*'s'^-1*')'))+ylab(expression('Excised A (μmol m'^-2*'s'^-1*')'))+
+    geom_abline(slope = 1, linetype="dashed")+ xlim(0,20)+ylim(0,20)+
+  scale_color_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")) +
+   scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")))
+#   annotate("text",x = 1, y = c(12:8), label = c("p = 5.05e-10","p = 5.69e-10","p = 0.0037","p = 3.28e-08","p = 2.20e-06"), color=c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),hjust=0))
+
+(gint.vs.gex= full.exin.delta%>%
+  ggscatter(x ="gs.int", y="gs.ex",color = "species",add = "reg.line", conf.int = TRUE) +
+   theme_classic()+theme(axis.text.x=element_text(size=15),axis.text.y=element_text(size=15))+
+    xlab(expression('Intact g'[s]* ' (mol m'^-2*'s'^-1*')'))+ylab(expression('Excised g'[s]* ' (mol m'^-2*'s'^-1*')'))+
+    geom_abline(slope = 1, linetype="dashed")+xlim(0,0.25)+ylim(0,0.25)+
+  scale_color_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")) +
+   scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")))
+
+(wpint.vs.wpex= full.exin.delta%>%
+  ggscatter(x ="watpot.int.mpa", y="watpot.ex.mpa",color = "species",add = "reg.line", conf.int = TRUE) +
+   theme_classic()+theme(axis.text.x=element_text(size=15),axis.text.y=element_text(size=15))+
+    xlab(expression('Intact Ψ (MPa)'))+ylab(expression('Excised Ψ (MPa)'))+
+    geom_abline(slope = 1, linetype="dashed")+xlim(-4,0)+ylim(-4,0)+
+  scale_color_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")) +
+   scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")))
+(ex.int.arranged=ggarrange(wpint.vs.wpex,gint.vs.gex,Aint.vs.Aex,nrow=1,ncol=3,labels=c("A","B","C"),common.legend=TRUE))
+
+(exint.arranged=ggarrange(wpint.vs.wpex,gint.vs.gex,Aint.vs.Aex,nrow=1,ncol=3,labels=c("A","B","C"),common.legend=TRUE))
+```
+
+--------------------------------------------------------------------------------
+**Mixed Effects Model and Plots:** Figure 4
+--------------------------------------------------------------------------------
+Run Linear mixed effects model:
+  Fixed effects: everything else
+  Random effects: individual with branch nested within
+  
+Main species mixed-effects model:
+```{r}
+#best to exclude time because it is circular and DOY since this is to related to individual.
+#Need to nest branch random effect within individual random effect.
+full.exin.data$A = as.numeric(full.exin.data$A)
+full.exin.data$Measure.height = as.numeric(full.exin.data$Measure.height)
+full.exin.data$Air.temp = as.numeric(full.exin.data$Air.temp)
+full.exin.data$Water.pot = as.numeric(full.exin.data$Water.pot)
+full.exin.data$gsw = as.numeric(full.exin.data$gsw)
+full.exin.data$calc.wp = as.numeric(full.exin.data$calc.wp)
+
+mixed2.modA <- lmer(A ~ (1|individual/branch) +Water.pot+ Measure.height+Air.temp+ Ex.int*species, data = full.exin.data)
+(summary2_tableA <- summary(mixed2.modA))
+
+mixed.modg <- lmer(gsw ~ (1|individual/grp.branch) +Water.pot+ Air.temp+ Measure.height+ Ex.int*species, data = full.exin.data)
+(summary_tableg <- summary(mixed.modg))
+
+mixed.modwatpot <- lmer(calc.wp ~ (1|individual/grp.branch) +gsw+ Air.temp+ Measure.height+ Ex.int*species, data = full.exin.data)
+(summary_tablewatpot <- summary(mixed.modwatpot))
+```  
+
+Species ~ A effect size plot:
+```{r}
+(fixed_effects_p_values.A <- summary2_tableA$coefficients[, "Pr(>|t|)"])
+(contrasts <- emmeans(mixed2.modA, pairwise ~ Ex.int | species))
+
+# Create a data frame with the provided contrast results
+contrast_data.A <- data.frame(
+  species = c("A.campestre", "B.papyrifera", "C.betulus", "P.menziesii", "Q.garryana"),
+  estimate = c(-2.922,  -0.550, -0.806, 1.658, -6.473),
+  significant = c(TRUE, FALSE, FALSE, TRUE, TRUE),
+  SE=c(0.580,0.576,0.588,0.522,0.690))
+
+(species.A=(ggplot(contrast_data.A, aes(x = species, y = estimate, fill = species, shape = species)) +
+  geom_point(position = position_dodge(width = 0.75), size = 3) +
+  geom_errorbar(
+    aes(ymin = estimate - SE, ymax = estimate + SE),
+    width = 0,
+    position = position_dodge(width = 0.75)) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 12),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 12),axis.title.y = element_text(size = 15),legend.title= element_blank()) +
+  ylab("Effect size for A") + xlab(" ") +  
+  scale_shape_manual(values = c(25,23,22,24,21)) +
+  scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")) +
+    geom_hline(yintercept=0, linetype="dashed")+
+  labs(fill = "species", shape = "species") +
+  coord_flip()))
+
+(species.A.plot=species.A + geom_text(aes(label = ifelse(significant, "*", "")), size = 6, vjust = 0, hjust = 0))
+```
+Species ~ gsw effect size plot:
+```{r}
+(fixed_effects_p_values.g <- summary_tableg$coefficients[, "Pr(>|t|)"])
+(contrasts <- emmeans(mixed.modg, pairwise ~ Ex.int | species))
+
+# Create a data frame with the provided contrast results
+contrast_data.g <- data.frame(
+  species = c("A.campestre", "B.papyrifera", "C.betulus", "P.menziesii", "Q.garryana"),
+  estimate = c(-0.02615, -0.00928, -0.01578, 0.00957, -0.05427),
+  significant = c(TRUE, FALSE, TRUE, TRUE, TRUE),
+  SE=c(0.00504,0.00501,0.00512,0.00448,0.00610))
+
+(species.g=(ggplot(contrast_data.g, aes(x = species, y = estimate, fill = species, shape = species)) +
+  geom_point(position = position_dodge(width = 0.75), size = 3) +
+  geom_errorbar(
+    aes(ymin = estimate - SE, ymax = estimate + SE),
+    width = 0,
+    position = position_dodge(width = 0.75)
+  ) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 12),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 12),axis.title.y = element_text(size = 15),legend.title= element_blank()) +
+  ylab(expression('Effect size for g'[s])) +  # Change the y-axis label to reflect species
+  xlab(" ") +  # Change the x-axis label
+  scale_shape_manual(values = c(25,23,22,24,21)) +
+  scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")) +
+    geom_hline(yintercept=0, linetype="dashed")+
+  labs(fill = "species", shape = "species") +
+  coord_flip()))  # Flip the coordinates to make species vertical
+
+(species.g.plot=species.g + geom_text(aes(label = ifelse(significant, "*", "")), size = 6, vjust = 0, hjust = 0))
+```
+Species ~ Watpot effect size plot:
+```{r}
+(fixed_effects_p_values.watpot <- summary_tablewatpot$coefficients[, "Pr(>|t|)"])
+(contrasts <- emmeans(mixed.modwatpot, pairwise ~ Ex.int | species))
+
+# Create a data frame with the provided contrast results
+contrast_data.watpot <- data.frame(
+  species = c("A.campestre", "B.papyrifera", "C.betulus", "P.menziesii", "Q.garryana"),
+  estimate = c(0.806,  0.794,0.849, 0.479, 1.260),
+  significant = c(TRUE, TRUE,TRUE, TRUE, TRUE),
+  SE=c(0.0698,0.0676,0.0682,0.0675,0.0778))
+
+(species.watpot=(ggplot(contrast_data.watpot, aes(x = species, y = estimate, fill = species, shape = species)) +
+  geom_point(position = position_dodge(width = 0.75), size = 3) +
+  geom_errorbar(aes(ymin = estimate - SE, ymax = estimate + SE),width = 0,position = position_dodge(width = 0.75)) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 12),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 12),axis.title.y = element_text(size = 15),legend.title= element_blank()) +
+  ylab("Effect size for Ψ") + 
+  xlab(" ") +
+  scale_shape_manual(values = c(25,23,22,24,21)) +
+  scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")) +
+    geom_hline(yintercept=0, linetype="dashed")+
+  labs(fill = "species", shape = "species") +
+  coord_flip()))
+
+(species.watpot.plot=species.watpot + geom_text(aes(label = ifelse(significant, "*", "")), size = 6, vjust = 0, hjust = 0))
+```
+
+Combine into a species effect plot based on the mixed effects models:
+```{r}
+(species.arranged=ggarrange(species.watpot.plot,species.g.plot,species.A.plot,nrow=1,ncol=3,labels=c("A","B","C"),common.legend=TRUE))
+```
+
+--------------------------------------------------------------------------------
+**Kar and Medlyn Plots:** Figure 5
+--------------------------------------------------------------------------------
+Medlyn 2011
+```{r}
+full.exin.data$VPDleaf = as.numeric(full.exin.data$VPDleaf)
+full.exin.data$Ca = as.numeric(full.exin.data$Ca)
+
+full.exin.data=full.exin.data%>%
+  mutate(carvpd=(1.6*A/(Ca/sqrt(VPDleaf))))
+
+F=as.formula(y~x)
+(medlyn.fig.int= full.exin.data%>%
+    filter(carvpd>0)%>%
+    filter(Ex.int=="Intact")%>%
+  ggplot(aes(x =carvpd, y=gsw, color=species)) + geom_point(shape=18)+
+   theme_classic()+theme(axis.text.x=element_text(size=15))+
+    xlab(expression(1.6*A/(Ca*sqrt(VPD))))+ylab(expression('g'[s]* ' (mol / (m'^2*'s)'*''))+
+    stat_smooth(aes(fill=species,color=species),method="lm",formula=F)+
+    stat_regline_equation(label.x=c(0.023,0.023,0.023,0.023,0.023),label.y=c(0.225 ,0.208,0.192,0.175,0.16),aes(label =  paste(..eq.label.., sep = "~~~~")),formula=F,size=4)+
+    stat_cor(aes(color=species,label = paste(..p.label..)), label.x = c(0,0,0,0,0),label.y =c(0.225 ,0.208,0.192,0.175,0.16))+
+    theme(legend.position = "none")+
+  scale_color_brewer(palette="Dark2")+scale_fill_brewer(palette="Dark2"))
+
+(medlyn.fig.ex= full.exin.data%>%
+    filter(carvpd>0)%>%
+    filter(Ex.int=="Excised")%>%
+  ggplot(aes(x =carvpd, y=gsw, color=species)) + geom_point(shape=16)+
+   theme_classic()+theme(axis.text.x=element_text(size=15))+
+    xlab(expression(1.6*A/(Ca*sqrt(VPD))))+ylab(expression('g'[s]* ' (mol / (m'^2*'s)'*''))+
+    stat_smooth(aes(fill=species,color=species),method="lm",formula=F)+
+    stat_regline_equation(label.x=c(0.018,0.018,0.018,0.018,0.018),label.y=c(0.225 ,0.208,0.192,0.175,0.16),aes(label =  paste(..eq.label..)),formula=F,size=4)+
+    stat_cor(aes(color=species,label = paste(..p.label..)), label.x = c(0,0,0,0,0),label.y =c(0.225 ,0.208,0.192,0.175,0.16))+
+  scale_color_brewer(palette="Dark2")+scale_fill_brewer(palette="Dark2"))
+```
+g1 graph - medlyn 2011
+```{r}
+# Calculate the slopes, standard errors, and set Ex.int for Intact
+slopes.int <- full.exin.data %>%
+  filter(carvpd > 0) %>%
+  filter(Ex.int == "Intact") %>%
+  group_by(species) %>%
+  do({
+    model <- lm(gsw ~ carvpd, data = .)
+    slope <- coef(model)[[2]]
+    se_slope <- summary(model)$coefficients[2, "Std. Error"]
+    ex.int <- "Intact"
+    data.frame(slope = slope, se_slope = se_slope, ex.int = ex.int)
+  })
+
+# Calculate the slopes, standard errors, and set Ex.int for Excised
+slopes.ex <- full.exin.data %>%
+  filter(carvpd > 0) %>%
+  filter(Ex.int == "Excised") %>%
+  group_by(species) %>%
+  do({
+    model <- lm(gsw ~ carvpd, data = .)
+    slope <- coef(model)[[2]]
+    se_slope <- summary(model)$coefficients[2, "Std. Error"]
+    ex.int <- "Excised"
+    data.frame(slope = slope, se_slope = se_slope, ex.int = ex.int)
+  })
+combined_data = bind_rows(slopes.int,slopes.ex)
+
+# Plot the graph with different colors and shapes for Intact and Excised, and species on the vertical axis
+(g1.plot=(ggplot(combined_data, aes(x = species, y = slope, shape = ex.int, fill=species)) +
+  geom_point(position = position_dodge(width = 0.75), size = 3) +
+  geom_errorbar(aes(ymin = slope - se_slope, ymax = slope + se_slope),width = 0,
+    position = position_dodge(width = 0.75)) +
+  theme_classic() +theme(axis.text.y = element_text(size = 12),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 12),
+                         axis.title.y = element_text(size = 15),legend.title= element_blank()) +
+  ylab(expression('g'[1])) + xlab(" ") +
+  scale_shape_manual(values = c(21,23)) +
+  scale_fill_manual(values=c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E")) +
+  labs(fill = "species",shape = "Ex.int") +
+  coord_flip()+guides(fill = guide_legend(override.aes = list(shape = c(22,22,22,22,22))))))
+
+
+```
+
+Combine Plots:
+```{r}
+med.2=ggarrange(medlyn.fig.int,medlyn.fig.ex,labels=c("A","B"),common.legend = TRUE)
+(medlyn.fig=ggarrange(med.2,g1.plot,widths=c(2,1),labels=c("","C")))
+```
+
+Compare slopes: Conclusion: only the pm is significant.
+```{r}
+ac.lm.dat <- full.exin.data%>%
+  filter(species=="A. campestre")
+bp.lm.dat <- full.exin.data%>%
+  filter(species=="B. papyrifera")
+cb.lm.dat <- full.exin.data%>%
+  filter(species=="C. betulus")
+pm.lm.dat <- full.exin.data%>%
+  filter(species=="P. menziesii")
+qg.lm.dat <- full.exin.data%>%
+  filter(species=="Q. garryana")
+  
+ac.inter=aov(gsw ~ carvpd * Ex.int, data = ac.lm.dat)
+bp.inter=aov(gsw ~ carvpd * Ex.int, data = bp.lm.dat)
+cb.inter=aov(gsw ~ carvpd * Ex.int, data = cb.lm.dat)
+pm.inter=aov(gsw ~ carvpd * Ex.int, data = pm.lm.dat)
+qg.inter=aov(gsw ~ carvpd * Ex.int, data = qg.lm.dat)
+
+ac.noint=aov(gsw ~ carvpd + Ex.int, data = ac.lm.dat)
+bp.noint=aov(gsw ~ carvpd + Ex.int, data = bp.lm.dat)
+cb.noint=aov(gsw ~ carvpd + Ex.int, data = cb.lm.dat)
+pm.noint=aov(gsw ~ carvpd + Ex.int, data = pm.lm.dat)
+qg.noint=aov(gsw ~ carvpd + Ex.int, data = qg.lm.dat)
+
+anova(ac.inter,ac.noint) #not sig
+anova(bp.inter,bp.noint) #not sig
+anova(cb.inter,cb.noint) #not sig
+anova(pm.inter,pm.noint) #significant
+anova(qg.inter,qg.noint) #not sig
+```
+
