@@ -100,8 +100,18 @@ Oak Panels:
 --------------------------------------------------------------------------------
 ```{r}
 full.exin.data$obs=as.character(full.exin.data$obs)
-watpot.lm=lm(calc.wp~hhmmss...5,data=full.exin.data)
-(summary(watpot.lm)) #Time is not significant!
+full.exin.data$elapsed = as.numeric(full.exin.data$elapsed)
+
+test.intact = full.exin.data%>%
+  filter(Ex.int =="Intact")
+watpot.lm.int=lm(calc.wp~elapsed,data=test.intact)
+(summary(watpot.lm.int)) #Time is super significant!
+
+test.ex = full.exin.data%>%
+  filter(Ex.int =="Excised")
+watpot.lm.ex=lm(calc.wp~elapsed,data=test.ex)
+(summary(watpot.lm.ex)) #Time is less but still significant!
+
 A.watpot.lm.dat=full.exin.data%>%
   filter(Ex.int=="Intact")
 A.watpot.lm=lm(A~calc.wp,data=A.watpot.lm.dat)
@@ -210,10 +220,10 @@ full.exin.data$calc.wp = as.numeric(full.exin.data$calc.wp)
 mixed2.modA <- lmer(A ~ (1|individual/branch) +Water.pot+ Measure.height+Air.temp+ Ex.int*species, data = full.exin.data)
 (summary2_tableA <- summary(mixed2.modA))
 
-mixed.modg <- lmer(gsw ~ (1|individual/grp.branch) +Water.pot+ Air.temp+ Measure.height+ Ex.int*species, data = full.exin.data)
+mixed.modg <- lmer(gsw ~ (1|individual/branch) +Water.pot+ Air.temp+ Measure.height+ Ex.int*species, data = full.exin.data)
 (summary_tableg <- summary(mixed.modg))
 
-mixed.modwatpot <- lmer(calc.wp ~ (1|individual/grp.branch) +gsw+ Air.temp+ Measure.height+ Ex.int*species, data = full.exin.data)
+mixed.modwatpot <- lmer(calc.wp ~ (1|individual/branch) +gsw+ Air.temp+ Measure.height+ Ex.int*species, data = full.exin.data)
 (summary_tablewatpot <- summary(mixed.modwatpot))
 ```  
 
@@ -426,5 +436,13 @@ anova(bp.inter,bp.noint) #not sig
 anova(cb.inter,cb.noint) #not sig
 anova(pm.inter,pm.noint) #significant
 anova(qg.inter,qg.noint) #not sig
+```
+
+
+```{r}
+psi.net.set = full.exin.data%>%
+  select(species,individ,individual,calc.wp,hhmmss...5,date,Air.temp,Ex.int,obs,Measure.height,A,gsw,VPDleaf)
+write.xlsx(psi.net.set, "psi.net.set.xlsx")
+
 ```
 
