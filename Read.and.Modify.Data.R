@@ -73,4 +73,7 @@ full.exin.data = full.exin.data %>%   #Make a new column with full species names
     obs=="9" ~ "12:50",obs=="10" ~ "12:50",
     obs=="11" ~ "13:50",obs=="12" ~ "13:50",
     obs=="13" ~ "14:50",obs=="14" ~ "14:50",
-    obs=="15" ~ "15:50",obs=="16" ~ "15:50"))   #This made a new time column so we have nicely formatted times
+    obs=="15" ~ "15:50",obs=="16" ~ "15:50")) #%>%  #This made a new time column so we have nicely formatted times
+  #select(-time...2, -TIME...11)%>%
+  #rename(time_exact = hhmmss...5)
+#write.csv(full.exin.data, "Cross_Exint.Data.csv")
