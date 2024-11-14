@@ -875,7 +875,7 @@ QG.corr.dat <- read.csv("corr.dat/QG.corr.dat_plot.csv")
 
 (corr.plot.all=ggarrange(plot.AC.corr,plot.BP.corr,plot.CB.corr,plot.PM.corr,plot.QG.corr,nrow=3,ncol=2))
 ```
-S4a: Map figure
+Figure 6: Map figure
 ```{r}
 study_data <- read_excel("ExtraFiles/meta.lnRR.LatLong.xlsx")
 world_map <- map_data("world")
@@ -902,7 +902,7 @@ color_palette <- c(
         legend.title = element_text(size = 16),
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "right",panel.border = element_rect(color = "black", fill = NA, size = 1)))
 ```
-S4b: Whittaker figure
+Figure 6: Whittaker figure
 ```{r}
 bioclim_data <- geodata::worldclim_global(var = 'bio', res = 10, path = tempdir())
 
