@@ -2,7 +2,6 @@
 #Creates a new data frame with calculated values from full.exin.data required for analysis
 
 #Load libraries
-library(dplyr)
 library(tidyr)
 
 #This code takes columns from full.exin.data and splits them apart by the treatment Ex.int.
@@ -51,3 +50,4 @@ full.exin.delta <- full.exin.delta %>%
     gm.int = A.int / as.numeric(Ci.int),
     gm.ex = A.ex / as.numeric(Ci.ex),
     delt.watpot.mpa = watpot.ex.mpa - watpot.int.mpa)
+

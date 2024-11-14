@@ -6,8 +6,6 @@ date: "2024-01-08"
 
 Libraries:
 ```{r}
-library(readxl)
-library(dplyr)
 library(hms)
 library(patchwork)
 library(cowplot)
@@ -21,6 +19,7 @@ library(lmerTest)
 library(broom)
 library(rstatix)
 library(grid)
+library(gridExtra)
 library(tidyr)
 library(writexl)
 library(stargazer)
@@ -38,6 +37,12 @@ library(vcd)
 library(factoextra)
 library(ggpattern)
 library(multcomp)
+library(maps)
+library(ggmap)
+library(raster)
+library(sp)
+library(geodata)
+library(terra)
 ```
 
 **First read in the two R scripts: Read.and.Modify.Data and Create.Delta.Data**
@@ -58,7 +63,7 @@ Oak Panels:
     geom_errorbar(aes(
       ymin = A_avg - ifelse(Ex.int == "Intact", 1.27177, 1.866506),
       ymax = A_avg + ifelse(Ex.int == "Intact", 1.27177, 1.866506)),width = 0.2)+
-   theme(axis.text.x=element_text(size=12),axis.text.y=element_text(size=15),axis.title.x=element_text(size=15),axis.title.y=element_text(size=15),legend.text = element_text(size = 15))+
+   theme(axis.text.x=element_text(size=12),axis.text.y=element_text(size=15),axis.title.x=element_text(size=15),axis.title.y=element_text(size=15),legend.text = element_text(size = 15), plot.title = element_text(face="italic"))+
      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           axis.line = element_line(color = "black"),panel.border = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1)))
 
@@ -180,35 +185,48 @@ wat.df = wat.df%>%mutate(time=case_when(
 --------------------------------------------------------------------------------
 Graph Aint vs. Aex and color by species - show 1:1 line
 ```{r}
-(Aint.vs.Aex= full.exin.delta%>%
-   filter(A.ex>0)%>%
-   filter(A.int>0)%>%
-  ggscatter(x ="A.int", y="A.ex",color = "species",add = "reg.line", conf.int = TRUE) +
-   theme_classic()+theme(axis.text.x=element_text(size=15),axis.text.y=element_text(size=15))+
-    xlab(expression('Intact photosynthesis (μmol m'^-2*'s'^-1*')'))+ylab(expression('Excised photosynthesis (μmol m'^-2*'s'^-1*')'))+
-    geom_abline(slope = 1, linetype="dashed")+ xlim(0,20)+ylim(0,20)+
-  scale_color_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),labels = c("Acer campestre","Betula papyrifera","Carpinus betulus","Pseudotsuga menziesii","Quercus garryana")) +
-   scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),labels = c("Acer campestre","Betula papyrifera","Carpinus betulus","Pseudotsuga menziesii","Quercus garryana")))
-#   annotate("text",x = 1, y = c(12:8), label = c("p = 5.05e-10","p = 5.69e-10","p = 0.0037","p = 3.28e-08","p = 2.20e-06"), color=c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),hjust=0))
+(Aint.vs.Aex = full.exin.delta %>%
+  filter(A.ex > 0) %>%
+  filter(A.int > 0) %>%
+  ggscatter(x = "A.int", y = "A.ex", color = "species", add = "reg.line", conf.int = TRUE) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(face = "italic")) +
+  xlab(expression('Intact photosynthesis (μmol m'^-2*'s'^-1*')')) +
+  ylab(expression('Excised photosynthesis (μmol m'^-2*'s'^-1*')')) +
+  geom_abline(slope = 1, linetype = "dashed") +
+  xlim(0, 20) +
+  ylim(0, 20) +
+  scale_color_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E"), labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")) +
+  scale_fill_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E"), labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"))
+)
 
-(gint.vs.gex= full.exin.delta%>%
-  ggscatter(x ="gs.int", y="gs.ex",color = "species",add = "reg.line", conf.int = TRUE) +
-   theme_classic()+theme(axis.text.x=element_text(size=15),axis.text.y=element_text(size=15))+
-    xlab(expression('Intact stomatal conductance (mol m'^-2*'s'^-1*')'))+ylab(expression('Excised stomatal conductance (mol m'^-2*'s'^-1*')'))+
-    geom_abline(slope = 1, linetype="dashed")+xlim(0,0.25)+ylim(0,0.25)+
-  scale_color_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),labels = c("Acer campestre","Betula papyrifera","Carpinus betulus","Pseudotsuga menziesii","Quercus garryana")) +
-   scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),labels = c("Acer campestre","Betula papyrifera","Carpinus betulus","Pseudotsuga menziesii","Quercus garryana")))
+(gint.vs.gex = full.exin.delta %>%
+  ggscatter(x = "gs.int", y = "gs.ex", color = "species", add = "reg.line", conf.int = TRUE) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(face = "italic")) +
+  xlab(expression('Intact stomatal conductance (mol m'^-2*'s'^-1*')')) +
+  ylab(expression('Excised stomatal conductance (mol m'^-2*'s'^-1*')')) +
+  geom_abline(slope = 1, linetype = "dashed") +
+  xlim(0, 0.25) +
+  ylim(0, 0.25) +
+  scale_color_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E"), labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")) +
+  scale_fill_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E"), labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"))
+)
 
-(wpint.vs.wpex= full.exin.delta%>%
-  ggscatter(x ="watpot.int.mpa", y="watpot.ex.mpa",color = "species",add = "reg.line", conf.int = TRUE) +
-   theme_classic()+theme(axis.text.x=element_text(size=15),axis.text.y=element_text(size=15))+
-    xlab(expression('Intact water potential (MPa)'))+ylab(expression('Excised water potential (MPa)'))+
-    geom_abline(slope = 1, linetype="dashed")+xlim(-4,0)+ylim(-4,0)+
-  scale_color_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),labels = c("Acer campestre","Betula papyrifera","Carpinus betulus","Pseudotsuga menziesii","Quercus garryana")) +
-   scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),labels = c("Acer campestre","Betula papyrifera","Carpinus betulus","Pseudotsuga menziesii","Quercus garryana")))
-(ex.int.arranged=ggarrange(wpint.vs.wpex,gint.vs.gex,Aint.vs.Aex,nrow=1,ncol=3,labels=c("A","B","C"),common.legend=TRUE))
+(wpint.vs.wpex = full.exin.delta %>%
+  ggscatter(x = "watpot.int.mpa", y = "watpot.ex.mpa", color = "species", add = "reg.line", conf.int = TRUE) +
+  theme_classic() +
+  theme(axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(face = "italic")) +
+  xlab(expression('Intact water potential (MPa)')) +
+  ylab(expression('Excised water potential (MPa)')) +
+  geom_abline(slope = 1, linetype = "dashed") +
+  xlim(-4, 0) +
+  ylim(-4, 0) +
+  scale_color_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E"), labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")) +
+  scale_fill_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E"), labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"))
+)
 
-(exint.arranged=ggarrange(wpint.vs.wpex,gint.vs.gex,Aint.vs.Aex,nrow=1,ncol=3,labels=c("A","B","C"),common.legend=TRUE))
+(ex.int.arranged = ggarrange(wpint.vs.wpex, gint.vs.gex, Aint.vs.Aex, nrow = 1, ncol = 3, labels = c("A", "B", "C"), common.legend = TRUE))
 
 ```
 
@@ -252,20 +270,20 @@ contrast_data.A <- data.frame(
   significant = c(TRUE, FALSE, FALSE, TRUE, TRUE),
   SE=c(0.580,0.576,0.588,0.522,0.690))
 
-(species.A=(ggplot(contrast_data.A, aes(x = species, y = estimate, fill = species, shape = species)) +
+(species.A<-ggplot(contrast_data.A, aes(x = species, y = estimate, fill = species, shape = species)) +
   geom_point(position = position_dodge(width = 0.75), size = 3) +
   geom_errorbar(
     aes(ymin = estimate - SE, ymax = estimate + SE),
     width = 0,
     position = position_dodge(width = 0.75)) +
   theme_classic() +
-  theme(axis.text.y = element_blank(),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 10),axis.title.y = element_text(size = 15),legend.title= element_blank()) +
+  theme(axis.text.y = element_text(face="italic"),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 10),axis.title.y = element_text(size = 15),legend.title= element_blank(),legend.text = element_text(face = "italic")) +
   ylab("Effect size for photosynthesis") + xlab(" ") +  
   scale_shape_manual(values = c(25,23,22,24,21), labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")) +
   scale_fill_manual(values = c("#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E"),labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")) +
     geom_hline(yintercept=0, linetype="dashed")+
   labs(fill = "species", shape = "species") +
-  coord_flip()))
+  coord_flip())
 
 (species.A.plot=species.A + geom_text(aes(label = ifelse(significant, "*", "")), size = 6, vjust = 0, hjust = 0))
 ```
@@ -289,7 +307,7 @@ contrast_data.g <- data.frame(
     position = position_dodge(width = 0.75)
   ) +
   theme_classic() +
-  theme(axis.text.y = element_blank(),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 9),axis.title.y = element_text(size = 15),legend.title= element_blank()) +
+  theme(axis.text.y = element_text(face="italic"),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 9),axis.title.y = element_text(size = 15),legend.title= element_blank(),legend.text = element_text(face = "italic")) +
   ylab(expression('Effect size for stomatal conductance')) +  
   xlab(" ") + 
   scale_shape_manual(values = c(25,23,22,24,21),labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")) +
@@ -316,7 +334,7 @@ contrast_data.watpot <- data.frame(
   geom_point(position = position_dodge(width = 0.75), size = 3) +
   geom_errorbar(aes(ymin = estimate - SE, ymax = estimate + SE),width = 0,position = position_dodge(width = 0.75)) +
   theme_classic() +
-  theme(axis.text.y = element_text(size = 12),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 10),axis.title.y = element_text(size = 15),legend.title= element_blank()) +
+  theme(axis.text.y = element_text(size = 12, face="italic"),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 10),axis.title.y = element_text(size = 15),legend.title= element_blank(),legend.text = element_text(face = "italic")) +
   ylab("Effect size for water potential") + 
   xlab(" ") +
   scale_shape_manual(values = c(25,23,22,24,21),labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")) +
@@ -405,8 +423,8 @@ combined_data = bind_rows(slopes.int,slopes.ex)
   geom_point(position = position_dodge(width = 0.75), size = 3) +
   geom_errorbar(aes(ymin = slope - se_slope, ymax = slope + se_slope),width = 0,
     position = position_dodge(width = 0.75)) +
-  theme_classic() +theme(axis.text.y = element_text(size = 12),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 12),
-                         axis.title.y = element_text(size = 15),legend.title= element_blank()) +
+  theme_classic() +theme(axis.text.y = element_text(size = 12, face="italic"),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 12),
+                         axis.title.y = element_text(size = 15),legend.title= element_blank(), legend.text = element_text(face="italic")) +
   ylab(expression('g'[1])) + xlab(" ") +
   scale_shape_manual(values = c(21,23)) +
   scale_fill_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E"),
@@ -457,224 +475,17 @@ anova(qg.inter,qg.noint) #not sig
 
 PSI Net dataset prep:
 ```{r}
-psi.net.set = full.exin.data%>%
-  select(species,individ,individual,calc.wp,hhmmss...5,date,Air.temp,Ex.int,obs,Measure.height,A,gsw,VPDleaf)
-write.xlsx(psi.net.set, "psi.net.set.xlsx")
-
-```
-
-Meta-analysis analysis and figure: DELETE THIS!!!
-```{r}
-intact.AC <- full.exin.data%>%
-  filter(species=="A. campestre")%>%
-  filter(Ex.int=="Intact")
-mean(intact.AC$A)
-sd(intact.AC$A)
-mean(intact.AC$gsw)
-sd(intact.AC$gsw)
-Ex.AC <- full.exin.data%>%
-  filter(species=="A. campestre")%>%
-  filter(Ex.int=="Excised")
-mean(Ex.AC$A)
-sd(Ex.AC$A)
-mean(Ex.AC$gsw)
-sd(Ex.AC$gsw)
-
-intact.BC <- full.exin.data%>%
-  filter(species=="B. papyrifera")%>%
-  filter(Ex.int=="Intact")
-mean(intact.BC$A)
-sd(intact.BC$A)
-mean(intact.BC$gsw)
-sd(intact.BC$gsw)
-Ex.BC <- full.exin.data%>%
-  filter(species=="B. papyrifera")%>%
-  filter(Ex.int=="Excised")
-mean(Ex.BC$A)
-sd(Ex.BC$A)
-mean(Ex.BC$gsw)
-sd(Ex.BC$gsw)
-
-intact.CB <- full.exin.data%>%
-  filter(species=="C. betulus")%>%
-  filter(Ex.int=="Intact")
-mean(intact.CB$A)
-sd(intact.CB$A)
-mean(intact.CB$gsw)
-sd(intact.CB$gsw)
-Ex.CB <- full.exin.data%>%
-  filter(species=="C. betulus")%>%
-  filter(Ex.int=="Excised")
-mean(Ex.CB$A)
-sd(Ex.CB$A)
-mean(Ex.CB$gsw)
-sd(Ex.CB$gsw)
-
-intact.PM <- full.exin.data%>%
-  filter(species=="P. menziesii")%>%
-  filter(Ex.int=="Intact")
-mean(intact.PM$A)
-sd(intact.PM$A)
-mean(intact.PM$gsw)
-sd(intact.PM$gsw)
-mean(intact.PM$calc.wp)
-sd(intact.PM$calc.wp)
-
-Ex.PM <- full.exin.data%>%
-  filter(species=="P. menziesii")%>%
-  filter(Ex.int=="Excised")
-mean(Ex.PM$A)
-sd(Ex.PM$A)
-mean(Ex.PM$gsw)
-sd(Ex.PM$gsw)
-mean(Ex.PM$calc.wp)
-sd(Ex.PM$calc.wp)
-
-intact.QG <- full.exin.data%>%
-  filter(species=="Q. garryana")%>%
-  filter(Ex.int=="Intact")
-mean(intact.QG$A)
-sd(intact.QG$A)
-mean(intact.QG$gsw)
-sd(intact.QG$gsw)
-mean(intact.QG$calc.wp)
-sd(intact.QG$calc.wp)
-
-Ex.QG <- full.exin.data%>%
-  filter(species=="Q. garryana")%>%
-  filter(Ex.int=="Excised")
-mean(Ex.QG$A)
-sd(Ex.QG$A)
-mean(Ex.QG$gsw)
-sd(Ex.QG$gsw)
-mean(Ex.QG$calc.wp)
-sd(Ex.QG$calc.wp)
-
-#Exclude Verryckt et al. 2020 - they only did one measurement per tree and only had 7 trees - also do not report means and sd, just median and range. Also exclude Lakso 1982 - no error terms and they don't state their n... Very old...
-
-#Load Data:
-RRDat <- read.xlsx("logRR_ExcisionData.xlsx")#%>%
-  #filter(Reference != "Verryckt et al. 2020")%>%
-  #filter(Reference != "Lakso 1982")
-
-#Function to calculate lnRR based on Eqn 4 of Nakagawa et al. 2022
-calculate_lnRR <- function(df) {
-  # Ensure columns are numeric
-  df <- df %>%
-    mutate(across(c(AmeanEx, AmeanInt, Aex_SE, Aint_SE, gEx, gInt, gExSE, gIntSE, n), as.numeric))
-  
-  df <- df %>%
-    mutate(
-      lnRRr = ifelse(is.na(Aex_SE), NA, log(AmeanEx / AmeanInt) + 0.5 * ((Aex_SE^2 / n) - (Aint_SE^2 / n))),
-      lnRR = log(AmeanEx / AmeanInt),
-      SE_lnRR = ifelse(is.na(Aex_SE), NA, sqrt((Aex_SE / (n * AmeanEx^2)) + (Aint_SE / (n * AmeanInt^2)))),
-      glnRRr = ifelse(is.na(gExSE) | is.na(gEx), NA, log(gEx / gInt) + 0.5 * ((gExSE^2 / n) - (gIntSE^2 / n))),
-      glnRR = ifelse(is.na(gEx), NA, log(gEx / gInt)),
-      gSE_lnRR = ifelse(is.na(gExSE) | is.na(gEx), NA, sqrt((gExSE / (n * gEx^2)) + (gIntSE / (n * gInt^2))))
-    )
-  return(df)
-}
-newRRDat <- calculate_lnRR(RRDat)
-newRRDat$text_style <- ifelse(newRRDat$Species %in% bold_species, "bold.italic", "italic")
-
-filtnewRRDat<-newRRDat%>%
-  filter(lnRRr != "NA")
-(t_test_lnRRs <- t.test(filtnewRRDat$lnRRr, filtnewRRDat$lnRR, paired = TRUE))
-gfiltnewRRDat<-newRRDat%>%
-  filter(glnRRr != "NA")
-(t_test_glnRRs <- t.test(gfiltnewRRDat$glnRRr, gfiltnewRRDat$glnRR, paired = TRUE))
-
-# Define the species to be bold
-bold_species <- c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")
-
-# Add a new column to specify text style
-
-
-# Plot for A that shows error bars
-(lnRR_A = ggplot(newRRDat, aes(x = lnRR, y = Species, color = SignificantA)) +
-  geom_point(shape = 18, size = 3) +  # shape 18 is a diamond
-  geom_errorbarh(aes(xmin = lnRR - SE_lnRR, xmax = lnRR + SE_lnRR), height = 0.2, size = 1, na.rm = TRUE) +
-  geom_vline(xintercept = 0, linetype = "dotted", color = "black") +
-  labs(x = "Photosynthetic log response ratio", y = "") +
-  theme_minimal() +
-  theme(
-    panel.grid = element_blank(),  # Remove all gridlines
-    axis.line = element_line(color = "black"),  # Add x and y axis lines
-    axis.text.y = element_text(face = newRRDat$text_style),  # Apply text style
-    panel.border = element_rect(color = "black", fill = NA)  # Add border around the plot
-  ) +
-  scale_y_discrete(limits = rev(levels(newRRDat$Species))) +
-  scale_color_manual(
-    values = c("Yes" = "darkred", "No" = "lightblue"),
-    labels = c("Yes" = "P < 0.05", "No" = "P > 0.05"),
-    name="Significance"
-  ))
-
-# Plot for gsw that shows error bars
-lnRR_gsw = ggplot(newRRDat, aes(x = glnRR, y = Species, color = Significantg)) +
-  geom_point(shape = 18, size = 3) +  # shape 18 is a diamond
-  geom_errorbarh(aes(xmin = glnRR - gSE_lnRR, xmax = glnRR + gSE_lnRR), height = 0.2, size = 1, na.rm = TRUE) +
-  geom_vline(xintercept = 0, linetype = "dotted", color = "black") +
-  labs(x = "Stomatal conductance log response ratio", y = "") +
-  theme_minimal() +
-  theme(
-    panel.grid = element_blank(),  # Remove all gridlines
-    axis.line = element_line(color = "black"),  # Add x and y axis lines
-    axis.text.y = element_text(face = newRRDat$text_style),  # Apply text style
-    panel.border = element_rect(color = "black", fill = NA)  # Add border around the plot
-  ) +
-  scale_y_discrete(limits = rev(levels(newRRDat$Species))) +
-  scale_color_manual(
-    values = c("Yes" = "darkred", "No" = "lightblue"),
-    labels = c("Yes" = "P < 0.05", "No" = "P > 0.05"),
-    name="Significance"
-  )
-
-lnRR_plots = ggarrange(lnRR_A, lnRR_gsw, nrow=2, ncol=1, labels=c("A","B"), common.legend = TRUE,legend = "right")
-# Assuming combined_plot is your plot object
-ggsave("lnRR_plots.png", plot = lnRR_plots, width = 7, height = 9, dpi = 300)
-
-
-# Create the barplot
-plot_data <- newRRDat %>%
-  select(Species, Xylem,lnRR, glnRR, text_style) %>%
-  pivot_longer(cols = c(lnRR, glnRR), names_to = "Response", values_to = "Value")%>%
-  group_by(Species, Xylem)
-
-
-(g1 <- plot_data%>%
-    group_by(Species, Xylem)%>%
-  ggplot(aes(x = Value, y = interaction(Species, Xylem), fill = Response)) +
-  geom_bar(stat = "identity", position = position_dodge()) +
-  theme_classic() +
-  theme(plot.margin = unit(c(1, 1, 4, 1), "lines"))+
-    scale_fill_manual(
-    values = c("lnRR" = "darkred", "glnRR" = "lightblue"),
-    labels = c("lnRR" = "Photosynthesis", "glnRR" = "Stomatal conductance"),
-    name = " "
-  ) +
-  labs(y = " ", x = "Log Response Ratio") +
-  theme_minimal() +
-  theme(
-    panel.grid = element_blank(),  # Remove all gridlines
-    axis.line = element_line(color = "black"),  # Add x and y axis lines
-    axis.text.y = element_text(face = newRRDat$text_style, hjust = 1),
-    panel.border = element_rect(color = "black", fill = NA)  # Add border around the plot
-  )
-)
+#psi.net.set = full.exin.data%>%
+  #select(species,individ,individual,calc.wp,hhmmss...5,date,Air.temp,Ex.int,obs,Measure.height,A,gsw,VPDleaf)
+#write.xlsx(psi.net.set, "psi.net.set.xlsx")
 
 ```
 
 Meta-analysis figure:
 ```{r}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(gridExtra)
-library(patchwork)
 
 # Load Data
-RRDat <- read.xlsx("logRR_ExcisionData.xlsx")
+RRDat <- read.xlsx("ExtraFiles/logRR_ExcisionData.xlsx")
 
 # Function to calculate lnRR based on Eqn 4 of Nakagawa et al. 2022
 calculate_lnRR <- function(df) {
@@ -692,6 +503,9 @@ calculate_lnRR <- function(df) {
 }
 
 newRRDat <- calculate_lnRR(RRDat)
+
+newRRDat <- newRRDat %>%
+  mutate(Species = factor(Species, levels = rev(sort(unique(Species)))))
 
 # Function to create main species panel
 create_mainpanel <- function(data, column) {
@@ -734,11 +548,6 @@ create_mainpanel <- function(data, column) {
 create_subpanel <- function(data, column, show_x_title = TRUE) {
   filtered_data <- data %>%
     filter(!is.na(!!sym(column)) & !!sym(column) != "Unknown" & !!sym(column) != "Unclassified")
-  
-  # Print the filtered data to verify
-  print(paste("Filtered data for", column))
-  print(filtered_data)
-  
   plot <- filtered_data %>%
     group_by(!!sym(column)) %>%
     summarise(
@@ -763,7 +572,7 @@ create_subpanel <- function(data, column, show_x_title = TRUE) {
       labels = c("mean_lnRR" = "Photosynthesis", "mean_glnRR" = "Stomatal conductance"),
       name = "Response"
     ) +
-    labs(x = ifelse(show_x_title, "Log Response Ratio", ""), y = gsub("_", " ", column)) +
+    labs(x = ifelse(show_x_title, "Log Response Ratio", ""), y=" ") +
     theme_classic() +
     theme(
       panel.border = element_rect(color = "black", fill = NA),
@@ -779,12 +588,12 @@ create_subpanel <- function(data, column, show_x_title = TRUE) {
 # Create panels
 main_panel <- create_mainpanel(newRRDat, "Species")
 xylem_panel <- create_subpanel(newRRDat, "Xylem", show_x_title = FALSE)
-exudates_panel <- create_subpanel(newRRDat, "Exudates", show_x_title = FALSE)
+exudates_panel <- create_subpanel(newRRDat, "Exudates", show_x_title = TRUE)
 clade_panel <- create_subpanel(newRRDat, "Clade", show_x_title = FALSE)
-drought_strategy_panel <- create_subpanel(newRRDat, "Drought_Strategy", show_x_title = TRUE)
+drought_strategy_panel <- create_subpanel(newRRDat, "Drought_Strategy", show_x_title = FALSE)
 
 # Combine all plots into one multi-panel plot using patchwork
-multi_panel_plot <- (main_panel | (xylem_panel / exudates_panel / clade_panel / drought_strategy_panel)) + 
+multi_panel_plot <- (main_panel | ( clade_panel / xylem_panel / drought_strategy_panel / exudates_panel)) + 
   plot_layout(widths = c(3, 2), guides = 'collect') + 
   plot_annotation(tag_levels = 'A', tag_prefix = "", tag_suffix = "", tag_sep = ". ") & 
   theme(legend.position = "bottom", plot.tag = element_text(face = "bold", size = 16))
@@ -834,33 +643,66 @@ summary(anova_clade)
 (tukey_clade <- TukeyHSD(anova_clade))
 summary(anova_drought_strategy)
 (tukey_ds <- TukeyHSD(anova_drought_strategy))
-
-
 ```
-
 
 Text reported stats (also section above titled compare slopes:...) 
 ```{r}
+ACDAT <- full.exin.delta%>%
+  filter(species=="A. campestre")
+BPDAT <- full.exin.delta%>%
+  filter(species=="B. papyrifera")
+CBDAT <- full.exin.delta%>%
+  filter(species=="C. betulus")
+PMDAT <- full.exin.delta%>%
+  filter(species=="P. menziesii")
+QGDAT <- full.exin.delta%>%
+  filter(species=="Q. garryana")
+summary(lm(A.int~A.ex, data=ACDAT))
+summary(lm(gs.int~gs.ex, data=ACDAT))
+summary(lm(A.int~A.ex, data=BPDAT))
+summary(lm(gs.int~gs.ex, data=BPDAT))
+summary(lm(A.int~A.ex, data=CBDAT))
+summary(lm(gs.int~gs.ex, data=CBDAT))
+summary(lm(A.int~A.ex, data=PMDAT))
+summary(lm(gs.int~gs.ex, data=PMDAT))
+summary(lm(A.int~A.ex, data=QGDAT))
+summary(lm(gs.int~gs.ex, data=QGDAT))
+
+intact.AC <- full.exin.data%>%
+  filter(species=="A. campestre")%>%
+  filter(Ex.int=="Intact")
+Ex.AC <- full.exin.data%>%
+  filter(species=="A. campestre")%>%
+  filter(Ex.int=="Excised")
+
+intact.BP <- full.exin.data%>%
+  filter(species=="B. papyrifera")%>%
+  filter(Ex.int=="Intact")
+Ex.BP <- full.exin.data%>%
+  filter(species=="B. papyrifera")%>%
+  filter(Ex.int=="Excised")
+
+intact.CB <- full.exin.data%>%
+  filter(species=="C. betulus")%>%
+  filter(Ex.int=="Intact")
+Ex.CB <- full.exin.data%>%
+  filter(species=="C. betulus")%>%
+  filter(Ex.int=="Excised")
+
 intact.PM <- full.exin.data%>%
   filter(species=="P. menziesii")%>%
   filter(Ex.int=="Intact")
-mean(intact.PM$calc.wp)
-sd(intact.PM$calc.wp)
 Ex.PM <- full.exin.data%>%
   filter(species=="P. menziesii")%>%
   filter(Ex.int=="Excised")
-mean(Ex.PM$calc.wp)
-sd(Ex.PM$calc.wp)
+
 intact.QG <- full.exin.data%>%
   filter(species=="Q. garryana")%>%
   filter(Ex.int=="Intact")
-mean(intact.QG$calc.wp)
-sd(intact.QG$calc.wp)
 Ex.QG <- full.exin.data%>%
   filter(species=="Q. garryana")%>%
   filter(Ex.int=="Excised")
-mean(Ex.QG$calc.wp)
-sd(Ex.QG$calc.wp)
+
 
 filt.qg.dat <- full.exin.delta%>%filter(species=="Q. garryana")
 summary(lm(watpot.ex~watpot.int, data=filt.qg.dat))
@@ -869,18 +711,16 @@ filt.pm.dat <- full.exin.delta%>%filter(species=="P. menziesii")
 summary(lm(watpot.ex~watpot.int, data=filt.pm.dat))
 
 (percentDecr_AC.A = ((mean(Ex.AC$A) - mean(intact.AC$A)) / mean(intact.AC$A))*100)
-(percentDecr_BC.A = ((mean(Ex.BC$A) - mean(intact.BC$A)) / mean(intact.BC$A))*100)
+(percentDecr_BP.A = ((mean(Ex.BP$A) - mean(intact.BP$A)) / mean(intact.BP$A))*100)
 (percentDecr_CB.A = ((mean(Ex.CB$A) - mean(intact.CB$A)) / mean(intact.CB$A))*100)
 (percentDecr_PM.A = ((mean(Ex.PM$A) - mean(intact.PM$A)) / mean(intact.PM$A))*100)
 (percentDecr_QG.A = ((mean(Ex.QG$A) - mean(intact.QG$A)) / mean(intact.QG$A))*100)
 
 (percentDecr_AC.g = ((mean(Ex.AC$gsw) - mean(intact.AC$gsw)) / mean(intact.AC$gsw))*100)
-(percentDecr_BC.g = ((mean(Ex.BC$gsw) - mean(intact.BC$gsw)) / mean(intact.BC$gsw))*100)
+(percentDecr_BP.g = ((mean(Ex.BP$gsw) - mean(intact.BP$gsw)) / mean(intact.BP$gsw))*100)
 (percentDecr_CB.g = ((mean(Ex.CB$gsw) - mean(intact.CB$gsw)) / mean(intact.CB$gsw))*100)
 (percentDecr_PM.g = ((mean(Ex.PM$gsw) - mean(intact.PM$gsw)) / mean(intact.PM$gsw))*100)
 (percentDecr_QG.g = ((mean(Ex.QG$gsw) - mean(intact.QG$gsw)) / mean(intact.QG$gsw))*100)
-
-
 
 
 ac.dat <- full.exin.delta%>%
@@ -913,7 +753,212 @@ qg.dat <- full.exin.delta%>%
 summary(lm(watpot.int.mpa~watpot.ex.mpa, data=qg.dat))
 summary(lm(gs.int~gs.ex, data=qg.dat))
 summary(lm(A.int~A.ex, data=qg.dat))
+```
+
+Figure S3:
+```{r}
+AC.corr.dat <- read.csv("corr.dat/AC.corr.dat_plot.csv")
+(plot.AC.corr <- AC.corr.dat %>%
+  mutate(indiv = as.factor(indiv)) %>%  # Ensure 'individual' is a factor
+  ggplot(aes(x = elapsed/60, y = A, color = indiv, group = indiv)) +  # Add group = individual
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Acer campestre", x = " ", y = "") + 
+  theme_minimal() + 
+  scale_color_manual(values = c("#1B9E77", "#1B9E77", "#1B9E77", "#1B9E77", "#1B9E77"), name = "") +
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    panel.border = element_blank(),
+    plot.title = element_text(size = 16, face="italic"),  # Increase title size
+    axis.title.x = element_text(size = 15),  # Increase x-axis title size
+    axis.title.y = element_text(size = 15),  # Increase y-axis title size
+    axis.text.x = element_text(size = 13),  # Increase x-axis text size
+    axis.text.y = element_text(size = 13)   # Increase y-axis text size
+  )
+)
+
+BP.corr.dat <- read.csv("corr.dat/BP.corr.dat_plot.csv")
+(plot.BP.corr <- BP.corr.dat %>%
+  mutate(indiv = as.factor(indiv)) %>%  # Ensure 'individual' is a factor
+  ggplot(aes(x = elapsed/60, y = A, color = indiv, group = indiv)) +  # Add group = individual
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Betula papyrifera", x = " ", y = "") + 
+  theme_minimal() + 
+  scale_color_manual(values = c("#D95F02","#D95F02","#D95F02","#D95F02","#D95F02"), name = "") + 
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    panel.border = element_blank(),
+    plot.title = element_text(size = 16, face="italic"),  # Increase title size
+    axis.title.x = element_text(size = 15),  # Increase x-axis title size
+    axis.title.y = element_text(size = 15),  # Increase y-axis title size
+    axis.text.x = element_text(size = 13),  # Increase x-axis text size
+    axis.text.y = element_text(size = 13)   # Increase y-axis text size
+  )
+)
+
+CB.corr.dat <- read.csv("corr.dat/CB.corr.dat_plot.csv")
+(plot.CB.corr <- CB.corr.dat %>%
+  mutate(indiv = as.factor(indiv)) %>%  # Ensure 'individual' is a factor
+  ggplot(aes(x = elapsed/60, y = A, color = indiv, group = indiv)) +  # Add group = individual
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Carpinus betulus", x = " ", y = expression('Photosynthetic rate (μmol/m'^2*'s'^-1*')')) + 
+  theme_minimal() + 
+  scale_color_manual(values = c("#7570B3","#7570B3","#7570B3","#7570B3","#7570B3"), name = "") + 
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    panel.border = element_blank(),
+    plot.title = element_text(size = 16, face="italic"),  # Increase title size
+    axis.title.x = element_text(size = 15),  # Increase x-axis title size
+    axis.title.y = element_text(size = 15),  # Increase y-axis title size
+    axis.text.x = element_text(size = 13),  # Increase x-axis text size
+    axis.text.y = element_text(size = 13)   # Increase y-axis text size
+  )
+)
+
+PM.corr.dat <- read.csv("corr.dat/PM.corr.dat_plot.csv")
+(plot.PM.corr <- PM.corr.dat %>%
+  mutate(indiv = as.factor(indiv)) %>%  # Ensure 'individual' is a factor
+  ggplot(aes(x = elapsed/60, y = A, color = indiv, group = indiv)) +  # Add group = individual
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Pseudotsuga menziesii", x = "Minutes", y = "") + 
+  theme_minimal() + 
+  scale_color_manual(values = c("#E7298A","#E7298A","#E7298A"), name = "") + 
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    panel.border = element_blank(),
+    plot.title = element_text(size = 16, face="italic"),  # Increase title size
+    axis.title.x = element_text(size = 15),  # Increase x-axis title size
+    axis.title.y = element_text(size = 15),  # Increase y-axis title size
+    axis.text.x = element_text(size = 13),  # Increase x-axis text size
+    axis.text.y = element_text(size = 13)   # Increase y-axis text size
+  )
+)
+
+QG.corr.dat <- read.csv("corr.dat/QG.corr.dat_plot.csv")
+(plot.QG.corr <- QG.corr.dat %>%
+  mutate(indiv = as.factor(indiv)) %>%  # Ensure 'individual' is a factor
+  ggplot(aes(x = elapsed/60, y = A, color = indiv, group = indiv)) +  # Add group = individual
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(title = "Quercus garryana", x = "Minutes", y = "") + 
+  theme_minimal() + 
+  scale_color_manual(values = c("#66A61E","#66A61E","#66A61E","#66A61E","#66A61E"), name = "") + 
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "black"),
+    panel.border = element_blank(),
+    plot.title = element_text(size = 16, face="italic"),  # Increase title size
+    axis.title.x = element_text(size = 15),  # Increase x-axis title size
+    axis.title.y = element_text(size = 15),  # Increase y-axis title size
+    axis.text.x = element_text(size = 13),  # Increase x-axis text size
+    axis.text.y = element_text(size = 13)   # Increase y-axis text size
+  )
+)
 
 
+(corr.plot.all=ggarrange(plot.AC.corr,plot.BP.corr,plot.CB.corr,plot.PM.corr,plot.QG.corr,nrow=3,ncol=2))
+```
+S4a: Map figure
+```{r}
+study_data <- read_excel("ExtraFiles/meta.lnRR.LatLong.xlsx")
+world_map <- map_data("world")
+color_palette <- c(
+  "Kar et al. 2021" = "#88CCEE", "Lakso 1982" = "#CC6677", "Meng and Arp 1992" = "#332288",
+  "Missik et al. 2021" = "#117733", "Miyazawa et al. 2011" = "#882255", "Santiago and Mulkey 2003" = "#D55E00",
+  "This Study" = "#AA4499", "Verryckt et al. 2020" = "#44AA99"
+)
+(map_S4 <- ggplot() +
+  geom_polygon(data = world_map, aes(x = long, y = lat, group = group), fill = "lightgray", color = "white") +
+  geom_point(data = study_data, aes(x = longitude, y = latitude, size = species, color = Reference), alpha = 0.7) +
+  scale_color_manual(values = color_palette) +  # Use scale_color_manual for the color aesthetic
+  scale_size_continuous(range = c(3, 10)) +  # Adjust the range for dot sizes
+  theme_classic() +
+  labs(x = "Longitude",
+       y = "Latitude",
+       size = "Species count",
+       color = "Reference") +
+  theme(axis.title.x = element_text(size = 17),  
+        axis.title.y = element_text(size = 17),  
+        axis.text.x = element_text(size = 16),  
+        axis.text.y = element_text(size = 16),
+        legend.text = element_text(size = 16),
+        legend.title = element_text(size = 16),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "right",panel.border = element_rect(color = "black", fill = NA, size = 1)))
+```
+S4b: Whittaker figure
+```{r}
+bioclim_data <- geodata::worldclim_global(var = 'bio', res = 10, path = tempdir())
+
+locations <- study_data %>%
+  dplyr::select(latitude, longitude)
+
+locations_vect <- vect(locations, geom = c("longitude", "latitude"), crs = "+proj=longlat +datum=WGS84")
+bioclim_values <- extract(bioclim_data, locations_vect)
+study_data <- cbind(study_data, bioclim_values)
+
+study_data <- study_data[, !duplicated(names(study_data))]
+study_data <- study_data %>%
+  rename(temperature = wc2.1_10m_bio_1, precipitation = wc2.1_10m_bio_12)
+
+# Load the Whittaker biome data
+Whittaker <- read.csv("ExtraFiles/WhittakerClimateSpace_path.csv", header = TRUE)
+
+# Define coordinates for plotting biome labels (numbers 1-9)
+biomes <- data.frame(
+  x = c(25.8, 18.7, 28.1, 18.5, 2.2, 28.4, 18, -8.7, 28.4),
+  y = c(4150, 2800, 1425, 2100, 1500, 675, 500, 250, 200),
+  label = c(1:9)
+)
+
+
+# Create the plot
+(Fig_1b <- ggplot(study_data, aes(x = temperature, y = precipitation)) + 
+  geom_path(data = Whittaker, aes(x = MAT_whittaker, y = MAP_whittaker)) +
+  geom_point(aes(fill = Reference, size = species), shape = 21, alpha = 0.75) +
+  scale_fill_manual(values = color_palette) +
+  scale_size_continuous(range = c(3, 10)) +  # Adjust the range for dot sizes
+  xlab(expression('Mean annual temperature' ~ (degree * C))) + 
+  ylab("Mean annual precip. (mm)") + 
+  guides(
+    fill = guide_legend(override.aes = list(size = 4)),
+    size = guide_legend(title = "Species Count")
+  ) +
+  geom_text(data = biomes, aes(label = label, x = x, y = y), size = 4) + 
+  theme_bw(base_size = 13) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        axis.title.x = element_text(size = 17),  
+        axis.title.y = element_text(size = 17),  
+        axis.text.x = element_text(size = 16),  
+        axis.text.y = element_text(size = 16),
+        legend.text = element_text(size = 16),
+        legend.title = element_text(size = 16),
+        legend.position = "right",
+        panel.border = element_rect(color = "black", fill = NA, size = 1)))
+
+figS4 = ggarrange(map_S4, Fig_1b, labels=c("F","G"), ncol=2, common.legend = TRUE,legend = "right")
+```
+
+Combine meta-analysis figure with map and whittaker figure
+```{r}
+(figS4 = ggarrange(map_S4, Fig_1b, labels=c("F","G"), nrow=1, common.legend = TRUE,legend = "left"))
+fig6 <- ggarrange(multi_panel_plot,figS4, nrow=2,heights = c(2, 1))
+ggsave("Fig6.png", plot = fig6, width = 14, height = 15, dpi = 300)
 ```
 
