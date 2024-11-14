@@ -1,6 +1,6 @@
 #**First read in the two R scripts: Read.and.Modify.Data and Create.Delta.Data**
 # Load Data
-RRDat <- read.xlsx("ExtraFiles/logRR_ExcisionData.xlsx")
+RRDat <- read.xlsx("Data/ExtraFiles/logRR_ExcisionData.xlsx")
 
 # Function to calculate lnRR based on Eqn 4 of Nakagawa et al. 2022
 calculate_lnRR <- function(df) {
@@ -117,7 +117,7 @@ multi_panel_plot <- (main_panel | ( clade_panel / xylem_panel / drought_strategy
 ggsave("multi_panel_plot.png", plot = multi_panel_plot, width = 14, height = 10, dpi = 300)
 
 
-study_data <- read_excel("ExtraFiles/meta.lnRR.LatLong.xlsx")
+study_data <- read_excel("Data/ExtraFiles/meta.lnRR.LatLong.xlsx")
 world_map <- map_data("world")
 color_palette <- c(
   "Kar et al. 2021" = "#88CCEE", "Lakso 1982" = "#CC6677", "Meng and Arp 1992" = "#332288",
@@ -156,7 +156,7 @@ study_data <- study_data %>%
   rename(temperature = wc2.1_10m_bio_1, precipitation = wc2.1_10m_bio_12)
 
 # Load the Whittaker biome data
-Whittaker <- read.csv("ExtraFiles/WhittakerClimateSpace_path.csv", header = TRUE)
+Whittaker <- read.csv("Data/ExtraFiles/WhittakerClimateSpace_path.csv", header = TRUE)
 
 # Define coordinates for plotting biome labels (numbers 1-9)
 biomes <- data.frame(

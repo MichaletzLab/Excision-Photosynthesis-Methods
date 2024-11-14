@@ -1,5 +1,5 @@
 #Code to create one large data fram from the raw licor files
-#Set working directory to a folder only containing the excel files related to this analysis.
+#**Set working directory to a folder only containing the excel files related to this analysis**
 
 #load libraries
 library(dplyr)
