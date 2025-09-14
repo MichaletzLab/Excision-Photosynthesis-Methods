@@ -11,7 +11,7 @@ watpot.lm.int=lm(calc.wp~elapsed,data=test.intact)
 test.ex = full.exin.data%>%
   filter(Ex.int =="Excised")
 watpot.lm.ex=lm(calc.wp~elapsed,data=full.exin.data)
-(summary(watpot.lm.ex)) #Time is not significant
+(summary(watpot.lm.ex)) #Time is not significant (borderline significant without unstable individuals)
 
 A.watpot.lm.dat=full.exin.data%>%
   filter(Ex.int=="Intact")

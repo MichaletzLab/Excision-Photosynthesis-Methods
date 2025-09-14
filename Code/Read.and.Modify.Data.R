@@ -27,17 +27,29 @@ processed_data <- lapply(files, function(file) {
   return(data)
 })
 
-# Check the column names of all data frames in processed_data
+
 all_col_names <- lapply(processed_data, colnames)
+all_names <- Reduce(union, all_col_names)
 
-# Find the common column names across all data frames
-common_col_names <- Reduce(intersect, all_col_names)
+# Add missing columns as NA where necessary
+processed_data_filled <- lapply(processed_data_filled, function(df) {
+  if ("Water.pot" %in% names(df)) {
+    df$Water.pot <- suppressWarnings(as.numeric(df$Water.pot))
+  }
+  if ("Measure.height" %in% names(df)) {
+    df$Measure.height <- suppressWarnings(as.numeric(df$Measure.height))
+  }
+  if ("Air.temp" %in% names(df)) {
+    df$Air.temp <- suppressWarnings(as.numeric(df$Air.temp))
+  }
+  if ("hhmmss...5" %in% names(df)) {
+    df$hhmmss...5 <- suppressWarnings(as.numeric(df$hhmmss...5))
+  }
+  df
+})
 
-# Filter the data frames to keep only the common columns
-processed_data_filtered <- lapply(processed_data, function(df) df[, common_col_names, drop = FALSE])
+full.exin.data <- bind_rows(processed_data_filled)
 
-# Make into a single data frame called full.exin.data
-full.exin.data <- do.call(rbind, processed_data_filtered)
 
 #Exclude the units row from the file (the licor files have a units row below the column names row)
 full.exin.data = full.exin.data%>%

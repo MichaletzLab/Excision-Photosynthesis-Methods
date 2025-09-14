@@ -62,7 +62,7 @@ new_col_names <- colnames(full.exin.delta) %>%
 
 #Rename individual columns to match what is used in analysis document / for figures
 full.exin.delta <- full.exin.delta %>%
-  rename_with(~new_col_names, everything())%>%
+  rename_with(~new_col_names, everything())#%>%
   rename(gs.int = gsw.int)%>%
   rename(gs.ex = gsw.ex)%>%
   rename(watpot.int = Water.pot.int)%>%

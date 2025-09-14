@@ -20,12 +20,19 @@ mixed.modwatpot <- lmer(calc.wp ~ (1|individual/branch) +gsw+ Air.temp+ Measure.
 (fixed_effects_p_values.A <- summary2_tableA$coefficients[, "Pr(>|t|)"])
 (contrasts <- emmeans(mixed2.modA, pairwise ~ Ex.int | species))
 
-# Create a data frame with the provided contrast results
+# Create a data frame with the provided contrast results for all individuals
+# contrast_data.A <- data.frame(
+#   species = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"),
+#   estimate = c(-2.922,  -0.550, -0.806, 1.658, -6.473),
+#   significant = c(TRUE, FALSE, FALSE, TRUE, TRUE), 
+#   SE=c(0.580,0.576,0.588,0.522,0.690))
+
+# Create a data frame with the provided contrast results for stability corrected data:
 contrast_data.A <- data.frame(
   species = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"),
-  estimate = c(-2.922,  -0.550, -0.806, 1.658, -6.473),
-  significant = c(TRUE, FALSE, FALSE, TRUE, TRUE),
-  SE=c(0.580,0.576,0.588,0.522,0.690))
+  estimate = c(-2.277,  -1.066, -0.989, 0.938, -6.314),
+  significant = c(TRUE, TRUE, TRUE, TRUE, TRUE), #These all become TRUE when unstable individuals are removed
+  SE=c(0.492,0.469,0.479,0.430,0.493))
 
 (species.A<-ggplot(contrast_data.A, aes(x = species, y = estimate, fill = species, shape = species)) +
     geom_point(position = position_dodge(width = 0.75), size = 3) +
@@ -47,12 +54,19 @@ contrast_data.A <- data.frame(
 (fixed_effects_p_values.g <- summary_tableg$coefficients[, "Pr(>|t|)"])
 (contrasts <- emmeans(mixed.modg, pairwise ~ Ex.int | species))
 
-# Create a data frame with the provided contrast results
+# # Create a data frame with the provided contrast results for full data
+# contrast_data.g <- data.frame(
+#   species = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"),
+#   estimate = c(-0.02615, -0.00928, -0.01578, 0.00957, -0.05427),
+#   significant = c(TRUE, FALSE, TRUE, TRUE, TRUE),
+#   SE=c(0.00504,0.00501,0.00512,0.00448,0.00610))
+
+# Create a data frame with the provided contrast results for stability corrected data
 contrast_data.g <- data.frame(
   species = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"),
-  estimate = c(-0.02615, -0.00928, -0.01578, 0.00957, -0.05427),
-  significant = c(TRUE, FALSE, TRUE, TRUE, TRUE),
-  SE=c(0.00504,0.00501,0.00512,0.00448,0.00610))
+  estimate = c(-0.02338, -0.01788, -0.01474, 0.00849, -0.04924),
+  significant = c(TRUE, TRUE, TRUE, FALSE, TRUE),
+  SE=c(0.00572,0.00545,0.00557,0.00499,0.00693))
 
 (species.g=(ggplot(contrast_data.g, aes(x = species, y = estimate, fill = species, shape = species)) +
               geom_point(position = position_dodge(width = 0.75), size = 3) +
@@ -76,12 +90,19 @@ contrast_data.g <- data.frame(
 (fixed_effects_p_values.watpot <- summary_tablewatpot$coefficients[, "Pr(>|t|)"])
 (contrasts <- emmeans(mixed.modwatpot, pairwise ~ Ex.int | species))
 
-# Create a data frame with the provided contrast results
+# Create a data frame with the provided contrast results for full data
+# contrast_data.watpot <- data.frame(
+#   species = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"),
+#   estimate = c(0.806,  0.794,0.849, 0.479, 1.260),
+#   significant = c(TRUE, TRUE,TRUE, TRUE, TRUE),
+#   SE=c(0.0698,0.0676,0.0682,0.0675,0.0778))
+
+# Create a data frame with the provided contrast results for stability corrected data
 contrast_data.watpot <- data.frame(
   species = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana"),
-  estimate = c(0.806,  0.794,0.849, 0.479, 1.260),
+  estimate = c(0.867,  0.743,0.805, 0.509, 1.307),
   significant = c(TRUE, TRUE,TRUE, TRUE, TRUE),
-  SE=c(0.0698,0.0676,0.0682,0.0675,0.0778))
+  SE=c(0.0779,0.0769,0.0763,0.0753,0.0866))
 
 (species.watpot=(ggplot(contrast_data.watpot, aes(x = species, y = estimate, fill = species, shape = species)) +
                    geom_point(position = position_dodge(width = 0.75), size = 3) +
