@@ -56,10 +56,11 @@ slopes.ex <- full.exin.data %>%
   })
 combined_data = bind_rows(slopes.int,slopes.ex)
 
+crit_val <- 1.96 
 # Plot the graph with different colors and shapes for Intact and Excised, and species on the vertical axis
 (g1.plot=(ggplot(combined_data, aes(x = species, y = slope, shape = ex.int, fill=species)) +
             geom_point(position = position_dodge(width = 0.75), size = 3) +
-            geom_errorbar(aes(ymin = slope - se_slope, ymax = slope + se_slope),width = 0,
+            geom_errorbar(aes(ymin = slope - se_slope*crit_val, ymax = slope + se_slope*crit_val),width = 0,
                           position = position_dodge(width = 0.75)) +
             theme_classic() +theme(axis.text.y = element_text(size = 12, face="italic"),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 12),
                                    axis.title.y = element_text(size = 15),legend.title= element_blank(), legend.text = element_text(face="italic")) +

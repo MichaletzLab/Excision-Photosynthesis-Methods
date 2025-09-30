@@ -59,7 +59,7 @@ wat.df = wat.df%>%mutate(time=case_when(
 (watpotplot.reg = wat.df %>%
     ggplot(aes(x = time, y = mean_Water.pot, color = Set, group = Set)) +
     geom_point() +
-    geom_smooth(method = "lm", se = TRUE, aes(group = Set, color = Set, fill = Set)) + # Set color and fill aesthetics
+    geom_smooth(method = "lm", se = TRUE, aes(group = Set, color = Set, fill = Set)) + 
     theme_bw() +
     scale_color_manual(values = c("dodgerblue1", "deeppink4"), name = "") +
     scale_fill_manual(values = c("dodgerblue1", "deeppink4"), name = "") + # Set fill colors for the bands

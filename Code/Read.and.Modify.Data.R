@@ -32,7 +32,7 @@ all_col_names <- lapply(processed_data, colnames)
 all_names <- Reduce(union, all_col_names)
 
 # Add missing columns as NA where necessary
-processed_data_filled <- lapply(processed_data_filled, function(df) {
+processed_data_filled <- lapply(processed_data, function(df) {
   if ("Water.pot" %in% names(df)) {
     df$Water.pot <- suppressWarnings(as.numeric(df$Water.pot))
   }
