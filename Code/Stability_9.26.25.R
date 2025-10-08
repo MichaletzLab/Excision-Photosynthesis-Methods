@@ -41,7 +41,7 @@ full.exin.data <- full.exin.data %>%
 # Step 1: create new CO2_OK column based on slope < 1
 full.exin.data$`ΔCO2:SLP` <- as.numeric(full.exin.data$`ΔCO2:SLP`)
 full.exin.data <- full.exin.data %>%
-  mutate(CO2_OK = ifelse(`ΔCO2:SLP` > 0.5 & `ΔCO2:SLP` < 1, 1, 0))
+  mutate(CO2_OK = ifelse(`ΔCO2:SLP` > -1 & `ΔCO2:SLP` < 1, 1, 0))
 
 # Step 2: summarise branch-level success
 summary_branches <- full.exin.data %>%

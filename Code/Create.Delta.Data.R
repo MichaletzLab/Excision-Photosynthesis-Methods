@@ -84,6 +84,8 @@ full.exin.delta <- full.exin.delta %>%
   mutate(
     delta = A.ex - A.int,
     ratio = A.ex / A.int,
+    watpot.ratio = watpot.ex.mpa / watpot.int.mpa,
+    ratio.gs = gs.ex/gs.int,
     delta.gs = gs.ex - gs.int,
     p.change = delta / A.int,
     gm.int = A.int / as.numeric(Ci.int),

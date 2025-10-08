@@ -39,7 +39,8 @@ slopes.int <- full.exin.data %>%
     slope <- coef(model)[[2]]
     se_slope <- summary(model)$coefficients[2, "Std. Error"]
     ex.int <- "Intact"
-    data.frame(slope = slope, se_slope = se_slope, ex.int = ex.int)
+    p_value = summary(model)$coefficients[2, "Pr(>|t|)"]
+    data.frame(slope = slope, se_slope = se_slope, ex.int = ex.int, p_value = p_value)
   })
 
 # Calculate the slopes, standard errors, and set Ex.int for Excised
@@ -52,7 +53,8 @@ slopes.ex <- full.exin.data %>%
     slope <- coef(model)[[2]]
     se_slope <- summary(model)$coefficients[2, "Std. Error"]
     ex.int <- "Excised"
-    data.frame(slope = slope, se_slope = se_slope, ex.int = ex.int)
+    p_value = summary(model)$coefficients[2, "Pr(>|t|)"]
+    data.frame(slope = slope, se_slope = se_slope, ex.int = ex.int,p_value = p_value)
   })
 combined_data = bind_rows(slopes.int,slopes.ex)
 
@@ -67,10 +69,21 @@ crit_val <- 1.96
             ylab(expression('g'[1])) + xlab(" ") +
             scale_shape_manual(values = c(21,23)) +
             scale_fill_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E"),
-                              labels = c("Quercus garryana", "Pseudotsuga menziesii", "Carpinus betulus", "Betula papyrifera", "Acer campestre")) +
+                              labels = c("Acer campestre", "Betula papyrifera", "Carpinus betulus", "Pseudotsuga menziesii", "Quercus garryana")) +
             labs(fill = "species",shape = "Ex.int") +
             coord_flip()+guides(fill = guide_legend(override.aes = list(shape = c(22,22,22,22,22))))))
 
 med.2=ggarrange(medlyn.fig.int,medlyn.fig.ex,labels=c("A","B"))
 (medlyn.fig=ggarrange(med.2,g1.plot,widths=c(1.5,1),labels=c("","C")))
+
+g1_effect <- full.exin.data %>%
+  filter(carvpd > 0) %>%
+  group_by(species) %>%
+  do({
+    model <- lm(gsw ~ carvpd * Ex.int, data = .)
+    p_val <- summary(model)$coefficients["carvpd:Ex.intIntact", "Pr(>|t|)"]
+    data.frame(p_value_excision = p_val)
+  })
+
+g1_effect
 

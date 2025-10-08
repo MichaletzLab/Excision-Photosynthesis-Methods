@@ -44,6 +44,7 @@ extract_contrasts <- function(model, response_label) {
     estimate = cont$estimate,
     SE = cont$SE,
     significant = cont$significant,
+    p_value = cont$p.value,
     response = response_label
   )
   
@@ -105,7 +106,7 @@ species.arranged <- ggarrange(
   nrow = 1, ncol = 3,
   labels = c("A", "B", "C"),
   common.legend = TRUE,
-  widths = c(1.75, 1, 1)
+  widths = c(1.5, 1, 1)
 )
 
 species.arranged

@@ -1,16 +1,16 @@
 #Asat
 ratio.data = full.exin.delta%>%
-  group_by(species, obs_1) %>%
+  group_by(species, obs) %>%
   summarize(ratio_avg = mean(ratio))%>%
   mutate(time=case_when(
-    obs_1=="1" ~ "08:30",
-    obs_1=="3" ~ "09:30",
-    obs_1=="5" ~ "10:30",
-    obs_1=="7" ~ "11:30",
-    obs_1=="9" ~ "12:30",
-    obs_1=="11" ~ "13:30",
-    obs_1=="13" ~ "14:30",
-    obs_1=="15" ~ "15:30"))%>%
+    obs=="1" ~ "08:30",
+    obs=="3" ~ "09:30",
+    obs=="5" ~ "10:30",
+    obs=="7" ~ "11:30",
+    obs=="9" ~ "12:30",
+    obs=="11" ~ "13:30",
+    obs=="13" ~ "14:30",
+    obs=="15" ~ "15:30"))%>%
   group_by(species,time)
 ratio.data = ratio.data%>%
   mutate(errorA=ratio_avg-(sd(ratio.data$ratio_avg)))
@@ -90,7 +90,7 @@ ratio.data = ratio.data%>%
     ), width = 0.2, color = "#66A61E") +
     theme_bw() +
     scale_color_manual(values = "#66A61E", name = "") +
-    theme(axis.text.x = element_text(size = 15)) +theme(legend.position = "none")+
+    theme(axis.text.x = element_text(size = 10)) +theme(legend.position = "none")+
     xlab(" ") + ylab(" ") +
     geom_hline(yintercept = 1, linetype = "dashed")+
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -187,7 +187,7 @@ watpot.dat = watpot.dat%>%
     ), width = 0.2, color = "#66A61E") +
     theme_bw() +
     scale_color_manual(values = "#66A61E", name = "") +
-    theme(axis.text.x = element_text(size = 15)) +theme(legend.position = "none")+
+    theme(axis.text.x = element_text(size = 10)) +theme(legend.position = "none")+
     xlab("") + ylab(" ") +
     geom_hline(yintercept = 1, linetype = "dashed")+
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -285,10 +285,11 @@ gs.dat = gs.dat%>%
     ), width = 0.2, color = "#66A61E") +
     theme_bw() +
     scale_color_manual(values = "#66A61E", name = "") +
-    theme(axis.text.x = element_text(size = 15)) +
+    theme(axis.text.x = element_text(size = 10)) +
     xlab("Time of day")+ylab(" ")+
     geom_hline(yintercept = 1, linetype = "dashed")+
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           axis.line = element_line(color = "black"),panel.border = element_blank()))
 
 (ratios.time=ggarrange(ac.W.time,ac.g.time,ac.A.time,bp.W.time,bp.g.time,bp.A.time,cb.W.time,cb.g.time,cb.A.time,pm.W.time,pm.g.time,pm.A.time,qg.W.time,qg.g.time,qg.A.time,  ncol = 3, nrow = 5, legend = FALSE))
+

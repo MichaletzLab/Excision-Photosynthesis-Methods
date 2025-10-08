@@ -207,10 +207,20 @@ newRRDat <- newRRDat %>%
 
 
 
-
+library(forcats)
 newRRDat <- newRRDat %>%
   filter(Reference != "Kar et al. 2021") %>%
   filter(Reference != "Meng and Arp 1992")
+newRRDat <- newRRDat %>%
+  mutate(Species = case_when(
+    Species == "Q. garryana"    ~ "Quercus garryana",
+    Species == "P. menziesii"   ~ "Pseudotsuga menziesii",
+    Species == "C. betulus"     ~ "Carpinus betulus",
+    Species == "B. papyrifera"  ~ "Betula papyrifera",
+    Species == "A. campestre"   ~ "Acer campestre",
+    TRUE ~ Species   # keep all others unchanged
+  ))%>%
+  mutate(Species = fct_rev(factor(Species)))
 
 # Function to create main species panel
 create_mainpanel <- function(data, column) {
@@ -289,6 +299,7 @@ create_subpanel <- function(data, column, show_x_title = TRUE) {
     ) +
     scale_x_continuous(limits = c(-3, 2.5))
 }
+  
 
 # Create panels
 main_panel <- create_mainpanel(newRRDat, "Species")
