@@ -8,6 +8,8 @@ RRDat <- RRDat %>%
 species_of_interest <- c("Q. garryana", "P. menziesii", 
                          "C. betulus", "B. papyrifera", "A. campestre")
 
+full.exin.data$A <- as.numeric(full.exin.data$A)
+full.exin.data$gsw <- as.numeric(full.exin.data$gsw)
 df <- full.exin.data %>%
   filter(species %in% species_of_interest)
 
@@ -136,7 +138,7 @@ test_results <- full.exin.data %>%
   filter(species %in% c("Q. garryana", "P. menziesii", 
                         "C. betulus", "B. papyrifera", "A. campestre")) %>%
   group_by(species) %>%
-  summarise(
+  dplyr::summarise(
     A_test = list(t.test(A ~ Ex.int, data = cur_data())),
     gsw_test = list(t.test(gsw ~ Ex.int, data = cur_data())),
     .groups = "drop"
