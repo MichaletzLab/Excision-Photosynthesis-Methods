@@ -2,9 +2,13 @@
 
 full.exin.data$VPDleaf = as.numeric(full.exin.data$VPDleaf)
 full.exin.data$Ca = as.numeric(full.exin.data$Ca)
+full.exin.data$RHcham=as.numeric(full.exin.data$RHcham)
+full.exin.data$Tleaf = as.numeric(full.exin.data$Tleaf)
+
+D = 1.6 #kPA calculated from 25C and 50% RH
 
 full.exin.data=full.exin.data%>%
-  mutate(carvpd=(1.6*A/(Ca/sqrt(VPDleaf))))
+  mutate(carvpd=(1.6*A/(Ca/sqrt(D))))
 
 F=as.formula(y~x)
 (medlyn.fig.int= full.exin.data%>%
@@ -12,7 +16,7 @@ F=as.formula(y~x)
     filter(Ex.int=="Intact")%>%
     ggplot(aes(x =carvpd, y=gsw, color=species)) + geom_point(shape=18)+
     theme_classic()+theme(axis.text.x=element_text(size=15))+
-    xlab(expression(1.6*A/(Ca*sqrt(VPD))))+ylab(expression('Stomatal conductance (mol·m'^-2*'·s'^-1*')'))+
+    xlab(expression(1.6*A/(Ca*sqrt(D))))+ylab(expression('Stomatal conductance (mol·m'^-2*'·s'^-1*')'))+
     stat_smooth(aes(fill=species,color=species),method="lm",formula=F)+
     stat_regline_equation(label.x=c(0.006,0.006,0.006,0.006,0.006),label.y=c(0.225 ,0.208,0.192,0.175,0.16),aes(label =  paste(..eq.label.., sep = "~~~~")),formula=F,size=4)+
     theme(legend.position = "none")+
@@ -23,7 +27,7 @@ F=as.formula(y~x)
     filter(Ex.int=="Excised")%>%
     ggplot(aes(x =carvpd, y=gsw, color=species)) + geom_point(shape=16)+
     theme_classic()+theme(axis.text.x=element_text(size=15))+
-    xlab(expression(1.6*A/(Ca*sqrt(VPD))))+ylab(expression('Stomatal conductance (mol·m'^-2*'·s'^-1*')'))+
+    xlab(expression(1.6*A/(Ca*sqrt(D))))+ylab(expression('Stomatal conductance (mol·m'^-2*'·s'^-1*')'))+
     stat_smooth(aes(fill=species,color=species),method="lm",formula=F)+
     stat_regline_equation(label.x=c(0.006,0.006,0.006,0.006,0.006),label.y=c(0.225 ,0.208,0.192,0.175,0.16),aes(label =  paste(..eq.label..)),formula=F,size=4)+
     theme(legend.position = "none")+
@@ -60,9 +64,9 @@ combined_data = bind_rows(slopes.int,slopes.ex)
 
 crit_val <- 1.96 
 # Plot the graph with different colors and shapes for Intact and Excised, and species on the vertical axis
-(g1.plot=(ggplot(combined_data, aes(x = species, y = slope, shape = ex.int, fill=species)) +
+(g1.plot=(ggplot(combined_data, aes(x = species, y = slope-sqrt(D), shape = ex.int, fill=species)) +
             geom_point(position = position_dodge(width = 0.75), size = 3) +
-            geom_errorbar(aes(ymin = slope - se_slope*crit_val, ymax = slope + se_slope*crit_val),width = 0,
+            geom_errorbar(aes(ymin = slope-sqrt(D) - se_slope*crit_val, ymax = slope-sqrt(D) + se_slope*crit_val),width = 0,
                           position = position_dodge(width = 0.75)) +
             theme_classic() +theme(axis.text.y = element_text(size = 12, face="italic"),axis.text.x = element_text(size = 12),axis.title.x = element_text(size = 12),
                                    axis.title.y = element_text(size = 15),legend.title= element_blank(), legend.text = element_text(face="italic")) +
