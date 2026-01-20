@@ -410,4 +410,4 @@ biomes <- data.frame(
 
 figS4 = ggarrange(map_S4, Fig_1b, labels=c("A","B"), ncol=2, common.legend = TRUE,legend = "right")
 fig6 <- ggarrange(figS4,multi_panel_plot, nrow=2,heights = c(1, 2))
-ggsave("Fig6.png", plot = fig6, width = 14, height = 15, dpi = 300)
+ggsave("Fig6.eps", plot = fig6, width = 14, height = 15, dpi = 300)

@@ -55,6 +55,10 @@ results <- full.exin.data %>%
 results
 
 # Slope tests: Change from A to gs and back for the two results. 
+AC_data <- full.exin.data %>%
+  filter(species=="A. campestre")
+t.test(as.numeric(gsw) ~ Ex.int, data =AC_data) ## Could repeat for each species
+
 slopes <- full.exin.delta %>%
   group_by(species) %>%
   do({

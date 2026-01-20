@@ -89,3 +89,4 @@ full.exin.data = full.exin.data %>%   #Make a new column with full species names
   #select(-time...2, -TIME...11)%>%
   #rename(time_exact = hhmmss...5)
 #write.csv(full.exin.data, "Cross_Exint.Data.csv")
+

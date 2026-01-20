@@ -23,14 +23,16 @@ wat.mean.ex <- full.exin.data %>%
   group_by(obs) %>%
   summarize(
     mean_Water.pot = mean(calc.wp),
-    SE_wat.pot = sd(calc.wp) / sqrt(n()))
+    SE_wat.pot = sd(calc.wp) / sqrt(n()),
+    species = species)
 
 wat.mean.int <- full.exin.data %>%
   filter(Ex.int == "Intact") %>%
   group_by(obs) %>%
   summarize(
     mean_Water.pot = mean(calc.wp),
-    SE_wat.pot = sd(calc.wp) / sqrt(n()))
+    SE_wat.pot = sd(calc.wp) / sqrt(n()),
+    species=species)
 
 wat.mean.ex$Set <- "Excised"
 wat.mean.int$Set <- "Intact"
